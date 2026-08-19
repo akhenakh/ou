@@ -122,9 +122,6 @@ func (a app) panel(halfW int, lines []string) string {
 		maxLines = 1
 	}
 
-	const bg = "\x1b[48;2;24;24;28m"
-	const reset = "\x1b[0m"
-
 	var b strings.Builder
 	for i := 0; i < maxLines; i++ {
 		text := ""
@@ -132,21 +129,14 @@ func (a app) panel(halfW int, lines []string) string {
 			text = truncate(lines[i], rightW)
 		}
 
-		b.WriteString(strings.Repeat(" ", halfW)) // transparent over the map
-
-		if i < len(lines) {
-			pad := rightW - runeLen(text)
-			if pad < 0 {
-				pad = 0
-			}
-			b.WriteString(bg)
-			b.WriteString(text)
-			b.WriteString(strings.Repeat(" ", pad))
-			b.WriteString(reset)
-		} else {
-			b.WriteString(strings.Repeat(" ", rightW))
+		pad := rightW - runeLen(text)
+		if pad < 0 {
+			pad = 0
 		}
 
+		b.WriteString(strings.Repeat(" ", halfW)) // transparent over the map
+		b.WriteString(text)
+		b.WriteString(strings.Repeat(" ", pad))
 		b.WriteString("\n")
 	}
 	return b.String()

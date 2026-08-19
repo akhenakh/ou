@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"unicode/utf8"
@@ -39,20 +40,27 @@ func main() {
 	opts := []tiletea.Option{tiletea.WithLogger(logger)}
 
 	var model tea.Model
-	if *file != "" {
+	switch {
+	case *file != "":
 		overlays, err := loadGeometryFile(*file)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "fatal:", err)
 			os.Exit(1)
 		}
-		m := tiletea.New(0, 0, 0,
-			append(opts,
-				tiletea.WithOverlays(overlays...),
-				tiletea.WithFitOverlays(),
-			)...,
-		)
-		model = newApp(m, describeOverlays(overlays))
-	} else {
+		model = overlayModel(opts, overlays)
+	case stdinIsPiped():
+		data, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "fatal:", err)
+			os.Exit(1)
+		}
+		overlays, err := guessGeometry(data)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "fatal:", err)
+			os.Exit(1)
+		}
+		model = overlayModel(opts, overlays)
+	default:
 		if !isSet("lat") || !isSet("lng") {
 			usage()
 			os.Exit(2)
@@ -80,9 +88,10 @@ func main() {
 func usage() {
 	fmt.Fprintln(os.Stderr, "usage: ou -lat <lat> -lng <lng> [-zoom <zoom>]")
 	fmt.Fprintln(os.Stderr, "       ou -file <path>")
+	fmt.Fprintln(os.Stderr, "       ou < geometry.geojson")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Open an interactive terminal map at a location, or display the")
-	fmt.Fprintln(os.Stderr, "geometry of a GeoJSON, WKT, or WKB file.")
+	fmt.Fprintln(os.Stderr, "geometry of a GeoJSON, WKT, or WKB file or of data piped on stdin.")
 }
 
 // isSet reports whether the named flag was explicitly provided on the command
@@ -95,6 +104,27 @@ func isSet(name string) bool {
 		}
 	})
 	return set
+}
+
+// stdinIsPiped reports whether stdin is not a terminal, i.e. data is being
+// piped or redirected in.
+func stdinIsPiped() bool {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return stat.Mode()&os.ModeCharDevice == 0
+}
+
+// overlayModel builds the interactive map model for a set of parsed overlays.
+func overlayModel(opts []tiletea.Option, overlays []maprender.Overlay) tea.Model {
+	m := tiletea.New(0, 0, 0,
+		append(opts,
+			tiletea.WithOverlays(overlays...),
+			tiletea.WithFitOverlays(),
+		)...,
+	)
+	return newApp(m, describeOverlays(overlays))
 }
 
 // loadGeometryFile reads a file and parses its geometry into overlays, guessing

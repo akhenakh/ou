@@ -13,12 +13,6 @@ the [tiletea](https://github.com/akhenakh/tiletea) map component, itself based o
 go install github.com/akhenakh/ou@latest
 ```
 
-> **Note:** `ou` depends on
-> [`github.com/akhenakh/tiletea`](https://github.com/akhenakh/tiletea), which is
-> currently a private repository. Building requires access to it (e.g. a
-> configured `GOPRIVATE=github.com/akhenakh`); it will be opened to the public
-> later.
-
 ## Usage
 
 Open the map with a marker at a specific location:
@@ -27,11 +21,17 @@ Open the map with a marker at a specific location:
 ou -lat 48.8566 -lng 2.3522
 ```
 
-Open a file and display its geometry. The file type is guessed from its content
-(GeoJSON, WKT, WKB, ...):
+Display a file's geometry. The format is guessed from its content (GeoJSON,
+WKT, WKB):
 
 ```sh
 ou -file /path/to/geometry.geojson
+```
+
+Or pipe geometry in on stdin; it's guessed the same way as `-file`:
+
+```sh
+cat /path/to/geometry.geojson | ou
 ```
 
 ## Controls

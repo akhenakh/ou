@@ -26,6 +26,8 @@ github.com/akhenakh/maprender v0.0.0-20260819141432-b8af348778e8 h1:a8eOkssh0M52
 github.com/akhenakh/maprender v0.0.0-20260819141432-b8af348778e8/go.mod h1:bfi0f5vTP2ZFhxn9VWSkXZF3W3gUrFVruluq+MvIVLc=
 github.com/akhenakh/mvtgo v0.0.0-20260426004454-bc6e3d2e2fd2 h1:LMYDm1Vmkcyi4EIfQtATvMYPtL/mbxcyGKKhcXI7PdQ=
 github.com/akhenakh/mvtgo v0.0.0-20260426004454-bc6e3d2e2fd2/go.mod h1:tFQaflbArkRqYqduzCEEwrVGQseV6y5DPePa5YuHE2U=
+github.com/akhenakh/tiletea v0.0.0-20260819223543-ce5fece23294 h1:UcIA/R2VutvNF8KhOw2CI383LoIpWF4Fv5UmzBmDqaM=
+github.com/akhenakh/tiletea v0.0.0-20260819223543-ce5fece23294/go.mod h1:TgoRx5P1xMRncgKkiRBd+zZJVngUPyzrBis36revzb4=
 github.com/andybalholm/brotli v1.2.2 h1:HzTuoo2ErYQqf5qvcJInB8uvqSVxRttzkFexPWtnceM=
 github.com/andybalholm/brotli v1.2.2/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/aymanbagabas/go-udiff v0.2.0 h1:TK0fH4MteXUDspT88n8CKzvK0X9O2xu9yQjWpi6yML8=

@@ -5,7 +5,7 @@ go 1.26.5
 require (
 	charm.land/bubbletea/v2 v2.0.7
 	github.com/akhenakh/maprender v0.0.0-20260819141432-b8af348778e8
-	github.com/akhenakh/tiletea v0.0.0-20260819194905-64aa9bde6a45
+	github.com/akhenakh/tiletea v0.0.0-20260819223543-ce5fece23294
 	github.com/peterstace/simplefeatures v0.59.0
 )
 
@@ -52,5 +52,3 @@ require (
 	modernc.org/token v1.1.0 // indirect
 	star-tex.org/x/tex v0.7.1 // indirect
 )
-
-replace github.com/akhenakh/tiletea => /home/akh/dev/tiletea

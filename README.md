@@ -3,6 +3,8 @@
 `où` (French for "where") is a command-line tool that opens an interactive map in
 your terminal and displays a location or geometry.
 
+![où](img/ou.png)
+
 It is built with [Bubble Tea](https://github.com/charmbracelet/bubbletea), using
 the [tiletea](https://github.com/akhenakh/tiletea) map component, itself based on
 [maprender](https://github.com/akhenakh/maprender).

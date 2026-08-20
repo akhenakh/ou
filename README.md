@@ -11,6 +11,15 @@ the [tiletea](https://github.com/akhenakh/tiletea) map component, itself based o
 
 ## Install
 
+### Homebrew
+
+```sh
+brew tap akhenakh/tap
+brew install ou
+```
+
+### Go
+
 ```sh
 go install github.com/akhenakh/ou@latest
 ```

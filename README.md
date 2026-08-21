@@ -32,6 +32,12 @@ Open the map with a marker at a specific location:
 ou -lat 48.8566 -lng 2.3522
 ```
 
+Or pass the coordinates directly as two positional arguments:
+
+```sh
+ou 48.8566 2.3522
+```
+
 Display a file's geometry. The format is guessed from its content (GeoJSON,
 WKT, WKB):
 

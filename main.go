@@ -12,6 +12,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strconv"
 	"unicode/utf8"
 
 	tea "charm.land/bubbletea/v2"
@@ -19,9 +20,12 @@ import (
 	"github.com/akhenakh/tiletea"
 )
 
+var (
+	lat = flag.Float64("lat", 0, "latitude of the marker")
+	lng = flag.Float64("lng", 0, "longitude of the marker")
+)
+
 func main() {
-	lat := flag.Float64("lat", 0, "latitude of the marker")
-	lng := flag.Float64("lng", 0, "longitude of the marker")
 	zoom := flag.Int("zoom", 14, "initial zoom level")
 	file := flag.String("file", "", "geometry file to display (GeoJSON, WKT, WKB)")
 	flag.Parse()
@@ -61,20 +65,21 @@ func main() {
 		}
 		model = overlayModel(opts, overlays)
 	default:
-		if !isSet("lat") || !isSet("lng") {
+		mlat, mlng, ok := coords()
+		if !ok {
 			usage()
 			os.Exit(2)
 		}
-		if *lat < -90 || *lat > 90 {
+		if mlat < -90 || mlat > 90 {
 			fmt.Fprintln(os.Stderr, "fatal: -lat must be between -90 and 90")
 			os.Exit(2)
 		}
-		if *lng < -180 || *lng > 180 {
+		if mlng < -180 || mlng > 180 {
 			fmt.Fprintln(os.Stderr, "fatal: -lng must be between -180 and 180")
 			os.Exit(2)
 		}
-		model = tiletea.New(*lat, *lng, *zoom,
-			append(opts, tiletea.WithMarker(*lat, *lng))...,
+		model = tiletea.New(mlat, mlng, *zoom,
+			append(opts, tiletea.WithMarker(mlat, mlng))...,
 		)
 	}
 
@@ -87,11 +92,41 @@ func main() {
 
 func usage() {
 	fmt.Fprintln(os.Stderr, "usage: ou -lat <lat> -lng <lng> [-zoom <zoom>]")
+	fmt.Fprintln(os.Stderr, "       ou <lat> <lng> [-zoom <zoom>]")
 	fmt.Fprintln(os.Stderr, "       ou -file <path>")
 	fmt.Fprintln(os.Stderr, "       ou < geometry.geojson")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Open an interactive terminal map at a location, or display the")
 	fmt.Fprintln(os.Stderr, "geometry of a GeoJSON, WKT, or WKB file or of data piped on stdin.")
+}
+
+// coords returns the marker position from either the -lat/-lng flags or, when
+// no flag is passed, from two positional arguments that both parse as floats,
+// e.g. "ou 48.8566 2.3522".
+func coords() (float64, float64, bool) {
+	if flag.NFlag() == 0 {
+		return parseCoordsArgs(flag.Args())
+	}
+	if !isSet("lat") || !isSet("lng") {
+		return 0, 0, false
+	}
+	return *lat, *lng, true
+}
+
+// parseCoordsArgs parses two positional arguments as a latitude and longitude.
+func parseCoordsArgs(args []string) (float64, float64, bool) {
+	if len(args) != 2 {
+		return 0, 0, false
+	}
+	alat, err := strconv.ParseFloat(args[0], 64)
+	if err != nil {
+		return 0, 0, false
+	}
+	alng, err := strconv.ParseFloat(args[1], 64)
+	if err != nil {
+		return 0, 0, false
+	}
+	return alat, alng, true
 }
 
 // isSet reports whether the named flag was explicitly provided on the command

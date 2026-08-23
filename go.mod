@@ -4,8 +4,8 @@ go 1.26.5
 
 require (
 	charm.land/bubbletea/v2 v2.0.7
-	github.com/akhenakh/maprender v0.0.0-20260819141432-b8af348778e8
-	github.com/akhenakh/tiletea v0.0.0-20260819223543-ce5fece23294
+	github.com/akhenakh/maprender v0.0.0-20260823002747-3d03aa0dbab0
+	github.com/akhenakh/tiletea v0.0.0-20260823002920-86b13f57be8e
 	github.com/peterstace/simplefeatures v0.59.0
 )
 
@@ -32,23 +32,23 @@ require (
 	github.com/go-text/typesetting v0.3.4 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
-	github.com/mattn/go-runewidth v0.0.27 // indirect
+	github.com/mattn/go-runewidth v0.0.28 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/srwiley/scanx v0.0.0-20190309010443-e94503791388 // indirect
-	github.com/tdewolff/canvas v0.0.0-20260809181527-bd13cbcdd680 // indirect
-	github.com/tdewolff/font v0.0.0-20260527091451-1663e68cb8a4 // indirect
-	github.com/tdewolff/minify/v2 v2.24.16 // indirect
-	github.com/tdewolff/parse/v2 v2.8.15 // indirect
+	github.com/tdewolff/canvas v0.0.0-20260822211237-56e622de465a // indirect
+	github.com/tdewolff/font v0.0.0-20260822205238-d0d2f004b117 // indirect
+	github.com/tdewolff/minify/v2 v2.24.17 // indirect
+	github.com/tdewolff/parse/v2 v2.8.16 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yuin/goldmark v1.8.5 // indirect
-	golang.org/x/image v0.44.0 // indirect
-	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/image v0.45.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
-	modernc.org/knuth v0.5.5 // indirect
+	golang.org/x/text v0.41.0 // indirect
+	modernc.org/knuth v0.6.0 // indirect
 	modernc.org/token v1.1.0 // indirect
 	star-tex.org/x/tex v0.7.1 // indirect
 )

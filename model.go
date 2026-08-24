@@ -23,17 +23,33 @@ type app struct {
 	showData bool
 	width    int
 	height   int
+
+	// Set by the map's click callback during Update; consumed right after to
+	// move the marker dot and trigger a re-render.
+	clicked    bool
+	clickedLat float64
+	clickedLng float64
+
+	// selectMode disables mouse tracking so the terminal can select and copy
+	// text (e.g. the lat/lng in the status line); toggled with "m".
+	selectMode bool
 }
 
 func newApp(m *tiletea.Map, data []datum) *app {
-	return &app{mapModel: m, data: data}
+	a := &app{mapModel: m, data: data}
+	m.SetClickCallback(func(lat, lng float64) {
+		a.clicked = true
+		a.clickedLat = lat
+		a.clickedLng = lng
+	})
+	return a
 }
 
-func (a app) Init() tea.Cmd {
+func (a *app) Init() tea.Cmd {
 	return a.mapModel.Init()
 }
 
-func (a app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		a.width = msg.Width
@@ -43,16 +59,30 @@ func (a app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a, cmd
 
 	case tea.KeyMsg:
-		if msg.String() == "d" || msg.String() == "D" {
+		switch msg.String() {
+		case "d", "D":
 			a.showData = !a.showData
 			m, cmd := a.mapModel.Update(a.sizeMsg())
 			a.mapModel = m.(*tiletea.Map)
 			return a, cmd
+		case "m", "M":
+			a.selectMode = !a.selectMode
+			return a, nil
 		}
 	}
 
 	m, cmd := a.mapModel.Update(msg)
 	a.mapModel = m.(*tiletea.Map)
+
+	// The click callback ran inside the map's Update; if it recorded a new
+	// click, move the marker dot to the clicked coordinates and re-render.
+	if _, isClick := msg.(tea.MouseClickMsg); isClick && a.clicked {
+		lat, lng := a.clickedLat, a.clickedLng
+		a.mapModel.SetMarker(&lat, &lng)
+		a.mapModel.SetStatusExtra(fmt.Sprintf("Clicked: %.6f, %.6f", lat, lng))
+		a.clicked = false
+		return a, tea.Batch(cmd, a.mapModel.Refresh())
+	}
 	return a, cmd
 }
 
@@ -60,7 +90,7 @@ func (a app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // reserved for the map's header (handled by tiletea) and one for the help bar,
 // so the map renders at height-2 rows. When the data panel is shown the map is
 // additionally rendered at half width.
-func (a app) sizeMsg() tea.WindowSizeMsg {
+func (a *app) sizeMsg() tea.WindowSizeMsg {
 	w := a.width
 	if a.showData {
 		w = a.width / 2
@@ -68,7 +98,7 @@ func (a app) sizeMsg() tea.WindowSizeMsg {
 	return tea.WindowSizeMsg{Width: w, Height: a.height - 1}
 }
 
-func (a app) View() tea.View {
+func (a *app) View() tea.View {
 	v := a.mapModel.View()
 
 	// The map view is "<header>\n" + kitty sequence. Split them so we can keep
@@ -105,12 +135,17 @@ func (a app) View() tea.View {
 
 	out := tea.NewView(b.String())
 	out.AltScreen = true
+	// The map handles clicks; enable mouse tracking like tiletea's own View
+	// does. In select mode it stays off so text can be selected and copied.
+	if !a.selectMode {
+		out.MouseMode = tea.MouseModeCellMotion
+	}
 	return out
 }
 
 // panelRows builds the list of rows shown in the data panel. An empty key marks
 // the title row.
-func (a app) panelRows() []datum {
+func (a *app) panelRows() []datum {
 	lat, lng := a.mapModel.Center()
 	rows := []datum{
 		{value: "Data  (d to hide)"},
@@ -126,7 +161,7 @@ func (a app) panelRows() []datum {
 // content height is stable across toggles: when rows is empty the right half is
 // blanked out, which clears a previously shown panel. Field names are drawn
 // with a highlighted background and values in the default style.
-func (a app) panel(halfW int, rows []datum) string {
+func (a *app) panel(halfW int, rows []datum) string {
 	rightW := a.width - halfW
 	if rightW < 1 {
 		rightW = 1
@@ -176,10 +211,14 @@ func (a app) panel(halfW int, rows []datum) string {
 
 // helpBar renders the help line at the bottom of the app. It has no trailing
 // newline so the kitty sequence stays within the last screen row.
-func (a app) helpBar() string {
-	text := "arrows/hjkl: pan   +/-: zoom   d: data   q: quit"
+func (a *app) helpBar() string {
+	mouse := "m: select"
+	if a.selectMode {
+		mouse = "m: clicks"
+	}
+	text := "arrows/hjkl: pan   +/-: zoom   d: data   " + mouse + "   q: quit"
 	if a.showData {
-		text = "arrows/hjkl: pan   +/-: zoom   d: hide data   q: quit"
+		text = "arrows/hjkl: pan   +/-: zoom   d: hide data   " + mouse + "   q: quit"
 	}
 	t := truncate(text, a.width-1)
 	pad := a.width - 1 - runeLen(t)

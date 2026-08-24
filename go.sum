@@ -26,8 +26,8 @@ github.com/akhenakh/maprender v0.0.0-20260823002747-3d03aa0dbab0 h1:a0VTDqyF0T5R
 github.com/akhenakh/maprender v0.0.0-20260823002747-3d03aa0dbab0/go.mod h1:bfi0f5vTP2ZFhxn9VWSkXZF3W3gUrFVruluq+MvIVLc=
 github.com/akhenakh/mvtgo v0.0.0-20260426004454-bc6e3d2e2fd2 h1:LMYDm1Vmkcyi4EIfQtATvMYPtL/mbxcyGKKhcXI7PdQ=
 github.com/akhenakh/mvtgo v0.0.0-20260426004454-bc6e3d2e2fd2/go.mod h1:tFQaflbArkRqYqduzCEEwrVGQseV6y5DPePa5YuHE2U=
-github.com/akhenakh/tiletea v0.0.0-20260823002920-86b13f57be8e h1:yvqXoFgxD9pbxKqERA7fRbg3AMJByWzb719PF6LRYbo=
-github.com/akhenakh/tiletea v0.0.0-20260823002920-86b13f57be8e/go.mod h1:9HXo3o/jKyWFZKmmdZS0Kmv2b/qX9Q8xrubweeEKZjk=
+github.com/akhenakh/tiletea v0.0.0-20260824012953-c6848c7c165d h1:EHlx+XGFMLylSl760SAC4eqHJqzWjVzWD8Hgj/AAsLc=
+github.com/akhenakh/tiletea v0.0.0-20260824012953-c6848c7c165d/go.mod h1:9HXo3o/jKyWFZKmmdZS0Kmv2b/qX9Q8xrubweeEKZjk=
 github.com/andybalholm/brotli v1.2.2 h1:HzTuoo2ErYQqf5qvcJInB8uvqSVxRttzkFexPWtnceM=
 github.com/andybalholm/brotli v1.2.2/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/aymanbagabas/go-udiff v0.2.0 h1:TK0fH4MteXUDspT88n8CKzvK0X9O2xu9yQjWpi6yML8=

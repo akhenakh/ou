@@ -20,6 +20,35 @@ func kittyCols(content string) string {
 	return m[1]
 }
 
+func TestClickMovesMarker(t *testing.T) {
+	ov, err := maprender.OverlayFromWKT("POINT(2.35 48.85)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := tiletea.New(0, 0, 0,
+		tiletea.WithOverlays(ov),
+		tiletea.WithTileURLTemplate("http://127.0.0.1:1/{z}/{x}/{y}.pbf"),
+	)
+	var model tea.Model = newApp(m, nil)
+
+	model, cmd := model.Update(tea.WindowSizeMsg{Width: 100, Height: 40})
+	if r := cmd(); r != nil {
+		model, _ = model.Update(r)
+	}
+
+	model, cmd = model.Update(tea.MouseClickMsg{X: 10, Y: 5, Button: tea.MouseLeft})
+	if cmd == nil {
+		t.Fatal("click produced no command, want a re-render cmd")
+	}
+	if r := cmd(); r != nil {
+		model, _ = model.Update(r)
+	}
+
+	if !strings.Contains(model.View().Content, "Clicked:") {
+		t.Fatal("status line does not report the clicked coordinates")
+	}
+}
+
 func TestSplitResize(t *testing.T) {
 	ov, err := maprender.OverlayFromWKT("POINT(2.35 48.85)")
 	if err != nil {

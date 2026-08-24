@@ -30,7 +30,6 @@ func main() {
 	file := flag.String("file", "", "geometry file to display (GeoJSON, WKT, WKB)")
 	flag.Parse()
 
-	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	if os.Getenv("DEBUG") != "" {
 		f, err := tea.LogToFile("debug.log", "ou")
 		if err != nil {
@@ -38,7 +37,7 @@ func main() {
 			os.Exit(1)
 		}
 		defer f.Close()
-		logger = slog.New(slog.NewTextHandler(f, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		setLogger(slog.New(slog.NewTextHandler(f, &slog.HandlerOptions{Level: slog.LevelDebug})))
 	}
 
 	opts := []tiletea.Option{tiletea.WithLogger(logger)}

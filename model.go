@@ -3,14 +3,24 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"log/slog"
 	"strconv"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/akhenakh/maprender"
 	"github.com/akhenakh/ouca"
 	"github.com/akhenakh/tiletea"
 )
+
+// logger discards output unless DEBUG is set, in which case main points it at
+// debug.log. Timing instrumentation below logs through it.
+var logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+
+func setLogger(l *slog.Logger) { logger = l }
 
 // ANSI styles used by the data panel and help bar.
 const (
@@ -47,6 +57,10 @@ type app struct {
 	matcher  *ouca.Index
 	matching bool
 	match    *ouca.Address
+
+	// Nanosecond timestamp of the last input event that may trigger a render.
+	// Used to measure end-to-end latency from input to display.
+	lastInput atomic.Int64
 }
 
 // matchResultMsg carries the outcome of an async closest-road lookup.
@@ -76,16 +90,54 @@ func (a *app) Init() tea.Cmd {
 	return a.mapModel.Init()
 }
 
+// stampInput records when the user event that may trigger a render arrived.
+func (a *app) stampInput() {
+	a.lastInput.Store(time.Now().UnixNano())
+}
+
+// sinceInput reports how long ago the last triggering input arrived.
+func (a *app) sinceInput() time.Duration {
+	ts := a.lastInput.Load()
+	if ts == 0 {
+		return 0
+	}
+	return time.Since(time.Unix(0, ts))
+}
+
+// timedRender wraps a render command so we can measure how long it waits in
+// bubbletea's command queue and how long it executes. The exec time covers
+// maprender.Render plus tiletea's kitty graphics encoding, which the status
+// bar's "Render:" value does not include; their difference is encode time.
+func (a *app) timedRender(cmd tea.Cmd) tea.Cmd {
+	if cmd == nil {
+		return nil
+	}
+	queued := time.Now()
+	return func() tea.Msg {
+		start := time.Now()
+		msg := cmd()
+		logger.Debug("render cmd",
+			"since_input", a.sinceInput(),
+			"queue", start.Sub(queued),
+			"exec", time.Since(start),
+			"type", fmt.Sprintf("%T", msg),
+		)
+		return msg
+	}
+}
+
 func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		a.stampInput()
 		a.width = msg.Width
 		a.height = msg.Height
 		m, cmd := a.mapModel.Update(a.sizeMsg())
 		a.mapModel = m.(*tiletea.Map)
-		return a, cmd
+		return a, a.timedRender(cmd)
 
 	case tea.KeyMsg:
+		a.stampInput()
 		switch msg.String() {
 		case "d", "D":
 			a.showData = !a.showData
@@ -103,6 +155,9 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m, cmd := a.mapModel.Update(msg)
 	a.mapModel = m.(*tiletea.Map)
 
+	if _, ok := msg.(tea.MouseClickMsg); ok {
+		a.stampInput()
+	}
 	switch msg := msg.(type) {
 	case tea.MouseClickMsg:
 		// The click callback ran inside the map's Update; if it recorded a new
@@ -112,7 +167,7 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.setMarker(a.clickedLat, a.clickedLng)
 			a.mapModel.SetStatusExtra(fmt.Sprintf("Clicked: %.6f, %.6f", a.clickedLat, a.clickedLng))
 			a.clicked = false
-			return a, tea.Batch(cmd, a.mapModel.Refresh())
+			return a, tea.Batch(cmd, a.timedRender(a.mapModel.Refresh()))
 		}
 	case matchResultMsg:
 		a.matching = false
@@ -125,7 +180,7 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			roadLabel(msg.addr), msg.addr.Distance))
 		return a, nil
 	}
-	return a, cmd
+	return a, a.timedRender(cmd)
 }
 
 // matchClosest starts an async ouca lookup for the road closest to the marker.
@@ -178,6 +233,7 @@ func (a *app) sizeMsg() tea.WindowSizeMsg {
 }
 
 func (a *app) View() tea.View {
+	start := time.Now()
 	v := a.mapModel.View()
 
 	// The map view is "<header>\n" + kitty sequence. Split them so we can keep
@@ -213,6 +269,12 @@ func (a *app) View() tea.View {
 	}
 
 	out := tea.NewView(b.String())
+	logger.Debug("view",
+		"since_input", a.sinceInput(),
+		"build", time.Since(start),
+		"bytes", b.Len(),
+		"kitty_bytes", len(kitty),
+	)
 	out.AltScreen = true
 	// The map handles clicks; enable mouse tracking like tiletea's own View
 	// does. In select mode it stays off so text can be selected and copied.

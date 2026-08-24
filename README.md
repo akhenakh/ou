@@ -59,6 +59,7 @@ cat /path/to/geometry.geojson | ou
 | `+` / `=` | Zoom in |
 | `-` | Zoom out |
 | `d` | Toggle the data panel (geometry mode only) |
+| `c` | Match the closest road to the marker with [ouca](https://github.com/akhenakh/ouca) (location mode only) |
 | `q` / `ctrl+c` | Quit |
 
 When viewing a geometry, press `d` to split the view in half vertically and show

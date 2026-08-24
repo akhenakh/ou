@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/akhenakh/maprender"
+	"github.com/akhenakh/ouca"
 	"github.com/akhenakh/tiletea"
 )
 
@@ -33,6 +36,23 @@ type app struct {
 	// selectMode disables mouse tracking so the terminal can select and copy
 	// text (e.g. the lat/lng in the status line); toggled with "m".
 	selectMode bool
+
+	// Marker position on screen; hasMarker reports whether one is displayed.
+	hasMarker bool
+	markerLat float64
+	markerLng float64
+
+	// ouca reverse geocoder, created lazily on the first "c" press, sharing
+	// maprender's tile cache so matched tiles are not re-downloaded.
+	matcher  *ouca.Index
+	matching bool
+	match    *ouca.Address
+}
+
+// matchResultMsg carries the outcome of an async closest-road lookup.
+type matchResultMsg struct {
+	addr *ouca.Address
+	err  error
 }
 
 func newApp(m *tiletea.Map, data []datum) *app {
@@ -43,6 +63,13 @@ func newApp(m *tiletea.Map, data []datum) *app {
 		a.clickedLng = lng
 	})
 	return a
+}
+
+// setMarker records that a marker is displayed at the given coordinates.
+func (a *app) setMarker(lat, lng float64) {
+	a.hasMarker = true
+	a.markerLat = lat
+	a.markerLng = lng
 }
 
 func (a *app) Init() tea.Cmd {
@@ -68,22 +95,74 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "m", "M":
 			a.selectMode = !a.selectMode
 			return a, nil
+		case "c", "C":
+			return a, a.matchClosest()
 		}
 	}
 
 	m, cmd := a.mapModel.Update(msg)
 	a.mapModel = m.(*tiletea.Map)
 
-	// The click callback ran inside the map's Update; if it recorded a new
-	// click, move the marker dot to the clicked coordinates and re-render.
-	if _, isClick := msg.(tea.MouseClickMsg); isClick && a.clicked {
-		lat, lng := a.clickedLat, a.clickedLng
-		a.mapModel.SetMarker(&lat, &lng)
-		a.mapModel.SetStatusExtra(fmt.Sprintf("Clicked: %.6f, %.6f", lat, lng))
-		a.clicked = false
-		return a, tea.Batch(cmd, a.mapModel.Refresh())
+	switch msg := msg.(type) {
+	case tea.MouseClickMsg:
+		// The click callback ran inside the map's Update; if it recorded a new
+		// click, move the marker dot to the clicked coordinates and re-render.
+		if a.clicked {
+			a.mapModel.SetMarker(&a.clickedLat, &a.clickedLng)
+			a.setMarker(a.clickedLat, a.clickedLng)
+			a.mapModel.SetStatusExtra(fmt.Sprintf("Clicked: %.6f, %.6f", a.clickedLat, a.clickedLng))
+			a.clicked = false
+			return a, tea.Batch(cmd, a.mapModel.Refresh())
+		}
+	case matchResultMsg:
+		a.matching = false
+		if msg.err != nil {
+			a.mapModel.SetStatusExtra("Match failed: " + msg.err.Error())
+			return a, nil
+		}
+		a.match = msg.addr
+		a.mapModel.SetStatusExtra(fmt.Sprintf("Closest road: %s (%.0f m)",
+			roadLabel(msg.addr), msg.addr.Distance))
+		return a, nil
 	}
 	return a, cmd
+}
+
+// matchClosest starts an async ouca lookup for the road closest to the marker.
+// It does nothing when no marker is on screen or a lookup is already running.
+func (a *app) matchClosest() tea.Cmd {
+	if !a.hasMarker || a.matching {
+		return nil
+	}
+	if a.matcher == nil {
+		dir, err := maprender.DefaultCacheDir()
+		if err != nil {
+			a.mapModel.SetStatusExtra("Match failed: " + err.Error())
+			return nil
+		}
+		a.matcher = ouca.NewIndex(ouca.WithCacheDir(dir))
+	}
+	a.matching = true
+	lat, lng := a.markerLat, a.markerLng
+	return func() tea.Msg {
+		addr, err := a.matcher.Reverse(context.Background(), lat, lng)
+		return matchResultMsg{addr: addr, err: err}
+	}
+}
+
+// roadLabel returns a human readable name for a matched address, preferring
+// the street name over the road reference and class.
+func roadLabel(addr *ouca.Address) string {
+	switch {
+	case addr.Street != "":
+		return addr.Street
+	case addr.Ref != "":
+		return addr.Ref
+	case addr.Class != "":
+		return addr.Class
+	default:
+		return "unnamed road"
+	}
 }
 
 // sizeMsg returns the window size the map should render at. One row is
@@ -153,6 +232,16 @@ func (a *app) panelRows() []datum {
 		{key: "Zoom", value: strconv.Itoa(a.mapModel.Zoom())},
 	}
 	rows = append(rows, a.data...)
+	if a.match != nil {
+		rows = append(rows,
+			datum{key: "Road", value: roadLabel(a.match)},
+			datum{key: "Snap", value: fmt.Sprintf("%.6f, %.6f", a.match.Lat, a.match.Lng)},
+			datum{key: "Dist", value: fmt.Sprintf("%.0f m", a.match.Distance)},
+		)
+		if a.match.Bearing != 0 {
+			rows = append(rows, datum{key: "Bearing", value: fmt.Sprintf("%.0f°", a.match.Bearing)})
+		}
+	}
 	return rows
 }
 
@@ -216,9 +305,13 @@ func (a *app) helpBar() string {
 	if a.selectMode {
 		mouse = "m: clicks"
 	}
-	text := "arrows/hjkl: pan   +/-: zoom   d: data   " + mouse + "   q: quit"
+	closest := ""
+	if a.hasMarker {
+		closest = "   c: road"
+	}
+	text := "arrows/hjkl: pan   +/-: zoom   d: data" + closest + "   " + mouse + "   q: quit"
 	if a.showData {
-		text = "arrows/hjkl: pan   +/-: zoom   d: hide data   " + mouse + "   q: quit"
+		text = "arrows/hjkl: pan   +/-: zoom   d: hide data" + closest + "   " + mouse + "   q: quit"
 	}
 	t := truncate(text, a.width-1)
 	pad := a.width - 1 - runeLen(t)

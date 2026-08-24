@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/akhenakh/maprender"
+	"github.com/akhenakh/ouca"
 	"github.com/akhenakh/tiletea"
 )
 
@@ -96,5 +98,80 @@ func TestSplitResize(t *testing.T) {
 	}
 	if strings.Contains(model.View().Content, "d to hide") {
 		t.Fatal("data panel shown after toggling back, want hidden")
+	}
+}
+
+func newTestApp(t *testing.T) *app {
+	t.Helper()
+	m := tiletea.New(0, 0, 0,
+		tiletea.WithTileURLTemplate("http://127.0.0.1:1/{z}/{x}/{y}.pbf"),
+	)
+	a := newApp(m, nil)
+	// Run the initial resize + render so the map leaves its loading state and
+	// the status line appears in the view.
+	model, cmd := a.Update(tea.WindowSizeMsg{Width: 100, Height: 40})
+	if r := cmd(); r != nil {
+		model, _ = model.Update(r)
+	}
+	return model.(*app)
+}
+
+func TestClosestRoadWithoutMarker(t *testing.T) {
+	a := newTestApp(t)
+
+	model, cmd := a.Update(tea.KeyPressMsg(tea.Key{Text: "c", Code: 'c'}))
+	if cmd != nil {
+		t.Fatal("c with no marker on screen produced a command, want none")
+	}
+	if strings.Contains(model.View().Content, "Match") {
+		t.Fatal("status line reports matching without a marker")
+	}
+}
+
+func TestClosestRoadWithMarker(t *testing.T) {
+	a := newTestApp(t)
+	a.setMarker(48.8566, 2.3522)
+
+	_, cmd := a.Update(tea.KeyPressMsg(tea.Key{Text: "c", Code: 'c'}))
+	if cmd == nil {
+		t.Fatal("c with a marker produced no command, want an async match")
+	}
+
+	// While the lookup is running, further presses are ignored.
+	if _, cmd := a.Update(tea.KeyPressMsg(tea.Key{Text: "c", Code: 'c'})); cmd != nil {
+		t.Fatal("c while matching produced a second command, want none")
+	}
+
+	model, _ := a.Update(matchResultMsg{addr: &ouca.Address{
+		Street:   "Rue de Rivoli",
+		Distance: 12.5,
+		Lat:      48.8566,
+		Lng:      2.3522,
+	}})
+
+	if !strings.Contains(model.View().Content, "Closest road: Rue de Rivoli") {
+		t.Fatal("status line does not report the matched street")
+	}
+
+	// The data panel lists the match details when shown.
+	model, _ = model.Update(tea.KeyPressMsg(tea.Key{Text: "d", Code: 'd'}))
+	v := model.View().Content
+	if !strings.Contains(v, "Rue de Rivoli") || !strings.Contains(v, "Snap") {
+		t.Fatal("data panel does not show the match details")
+	}
+}
+
+func TestClosestRoadFailure(t *testing.T) {
+	a := newTestApp(t)
+	a.setMarker(48.8566, 2.3522)
+
+	_, cmd := a.Update(tea.KeyPressMsg(tea.Key{Text: "c", Code: 'c'}))
+	if r := cmd(); r != nil {
+		a.Update(r)
+	}
+	model, _ := a.Update(matchResultMsg{err: errors.New("no road found")})
+
+	if !strings.Contains(model.View().Content, "Match failed") {
+		t.Fatal("status line does not report the match failure")
 	}
 }

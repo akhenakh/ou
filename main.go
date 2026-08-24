@@ -78,9 +78,11 @@ func main() {
 			fmt.Fprintln(os.Stderr, "fatal: -lng must be between -180 and 180")
 			os.Exit(2)
 		}
-		model = newApp(tiletea.New(mlat, mlng, *zoom,
+		a := newApp(tiletea.New(mlat, mlng, *zoom,
 			append(opts, tiletea.WithMarker(mlat, mlng))...,
 		), nil)
+		a.setMarker(mlat, mlng)
+		model = a
 	}
 
 	p := tea.NewProgram(model)

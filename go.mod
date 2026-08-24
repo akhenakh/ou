@@ -4,9 +4,9 @@ go 1.26.6
 
 require (
 	charm.land/bubbletea/v2 v2.0.7
-	github.com/akhenakh/maprender v0.0.0-20260823002747-3d03aa0dbab0
+	github.com/akhenakh/maprender v0.0.0-20260824230925-ca8cfbf0bb25
 	github.com/akhenakh/ouca v0.0.0-20260824013706-bb9ac3e12b2f
-	github.com/akhenakh/tiletea v0.0.0-20260824131822-a7647bf13dfb
+	github.com/akhenakh/tiletea v0.0.0-20260824231246-2699bf541a2c
 	github.com/peterstace/simplefeatures v0.59.0
 )
 

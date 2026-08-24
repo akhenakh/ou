@@ -24,12 +24,16 @@ github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b h1:slYM766cy2nI3BwyR
 github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b/go.mod h1:1KcenG0jGWcpt8ov532z81sp/kMMUG485J2InIOyADM=
 github.com/akhenakh/maprender v0.0.0-20260823002747-3d03aa0dbab0 h1:a0VTDqyF0T5R35Hed913ACQw9o3RLQmjN6f+rY21WlE=
 github.com/akhenakh/maprender v0.0.0-20260823002747-3d03aa0dbab0/go.mod h1:bfi0f5vTP2ZFhxn9VWSkXZF3W3gUrFVruluq+MvIVLc=
+github.com/akhenakh/maprender v0.0.0-20260824230925-ca8cfbf0bb25 h1:+UarxYzokiZEN45U+FRicYVoPRZnUnuGtPi2nSMUfAI=
+github.com/akhenakh/maprender v0.0.0-20260824230925-ca8cfbf0bb25/go.mod h1:bfi0f5vTP2ZFhxn9VWSkXZF3W3gUrFVruluq+MvIVLc=
 github.com/akhenakh/mvtgo v0.0.0-20260426004454-bc6e3d2e2fd2 h1:LMYDm1Vmkcyi4EIfQtATvMYPtL/mbxcyGKKhcXI7PdQ=
 github.com/akhenakh/mvtgo v0.0.0-20260426004454-bc6e3d2e2fd2/go.mod h1:tFQaflbArkRqYqduzCEEwrVGQseV6y5DPePa5YuHE2U=
 github.com/akhenakh/ouca v0.0.0-20260824013706-bb9ac3e12b2f h1:fXc6lh+QdvUsUvD4LGScXa3g7zGg/T6CAOgORYtU1BU=
 github.com/akhenakh/ouca v0.0.0-20260824013706-bb9ac3e12b2f/go.mod h1:7w2JARg/6KwRbHvfBZr+xa3NQyLsQY/ZCCS2cdGYNJY=
 github.com/akhenakh/tiletea v0.0.0-20260824131822-a7647bf13dfb h1:kWFQx5IRSKc9PUuqoJJ/IYVNisKyJOWlwL3gKV8K8Jg=
 github.com/akhenakh/tiletea v0.0.0-20260824131822-a7647bf13dfb/go.mod h1:9HXo3o/jKyWFZKmmdZS0Kmv2b/qX9Q8xrubweeEKZjk=
+github.com/akhenakh/tiletea v0.0.0-20260824231246-2699bf541a2c h1:M+0bZhCoRW1bg6ympSKs9pdz1lKN6ixUQgvKPo2u1Cw=
+github.com/akhenakh/tiletea v0.0.0-20260824231246-2699bf541a2c/go.mod h1:QcdgtQVDct7K3ghu3w/VZoB6u6LkZqxcjFo0H2rNewk=
 github.com/andybalholm/brotli v1.2.2 h1:HzTuoo2ErYQqf5qvcJInB8uvqSVxRttzkFexPWtnceM=
 github.com/andybalholm/brotli v1.2.2/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/aymanbagabas/go-udiff v0.2.0 h1:TK0fH4MteXUDspT88n8CKzvK0X9O2xu9yQjWpi6yML8=

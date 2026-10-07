@@ -24,6 +24,14 @@ brew install ou
 go install github.com/akhenakh/ou@latest
 ```
 
+### Arch Linux (AUR)
+
+`ou` is available in the [AUR](https://aur.archlinux.org/packages/ou):
+
+```sh
+paru -S ou
+```
+
 ## Usage
 
 Open the map with a marker at a specific location:

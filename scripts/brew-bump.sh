@@ -72,6 +72,10 @@ class ${CLASS} < Formula
   def install
     bin.install "${BIN}"
   end
+
+  test do
+    assert_match "flag provided but not defined", shell_output("#{bin}/${BIN} -bogus 2>&1", 2)
+  end
 end
 EOF
 

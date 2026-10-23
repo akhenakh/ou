@@ -32,6 +32,15 @@ go install github.com/akhenakh/ou@latest
 paru -S ou
 ```
 
+### Verifying a release
+
+Release archives carry [build provenance](https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds)
+signed by this repository's release workflow. Check a downloaded archive with:
+
+```sh
+gh attestation verify ou_Darwin_arm64.tar.gz --repo akhenakh/ou
+```
+
 ## Usage
 
 Open the map with a marker at a specific location:

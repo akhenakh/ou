@@ -28,10 +28,8 @@ sha() {
 
 DARWIN_AMD64="$(sha "${BIN}_Darwin_x86_64.tar.gz")"
 DARWIN_ARM64="$(sha "${BIN}_Darwin_arm64.tar.gz")"
-LINUX_AMD64="$(sha "${BIN}_Linux_x86_64.tar.gz")"
-LINUX_ARM64="$(sha "${BIN}_Linux_arm64.tar.gz")"
 
-for v in DARWIN_AMD64 DARWIN_ARM64 LINUX_AMD64 LINUX_ARM64; do
+for v in DARWIN_AMD64 DARWIN_ARM64; do
   if [[ -z "${!v}" ]]; then
     echo "error: missing checksum for ${v}" >&2
     exit 1
@@ -45,27 +43,19 @@ cat > "$TMP/${BIN}.rb" <<EOF
 class ${CLASS} < Formula
   desc "${DESC}"
   homepage "https://github.com/${REPO}"
+  # Apple Silicon is the default; on_intel overrides it.
+  url "https://github.com/${REPO}/releases/download/${TAG}/${BIN}_Darwin_arm64.tar.gz"
+  sha256 "${DARWIN_ARM64}"
   license "${LICENSE}"
 
+  # Homebrew on Linux is not supported; Linux users install the release
+  # tarball directly.
+  depends_on :macos
+
   on_macos do
-    on_arm do
-      url "https://github.com/${REPO}/releases/download/${TAG}/${BIN}_Darwin_arm64.tar.gz"
-      sha256 "${DARWIN_ARM64}"
-    end
     on_intel do
       url "https://github.com/${REPO}/releases/download/${TAG}/${BIN}_Darwin_x86_64.tar.gz"
       sha256 "${DARWIN_AMD64}"
-    end
-  end
-
-  on_linux do
-    on_arm do
-      url "https://github.com/${REPO}/releases/download/${TAG}/${BIN}_Linux_arm64.tar.gz"
-      sha256 "${LINUX_ARM64}"
-    end
-    on_intel do
-      url "https://github.com/${REPO}/releases/download/${TAG}/${BIN}_Linux_x86_64.tar.gz"
-      sha256 "${LINUX_AMD64}"
     end
   end
 
